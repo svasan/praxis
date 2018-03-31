@@ -6,4 +6,6 @@ int less(unsigned a, unsigned b, stats_t *stats);
 
 void swap(unsigned *a, unsigned *b, stats_t *stats);
 
+void copy(unsigned *from, unsigned *to, stats_t *stats);
+
 #endif

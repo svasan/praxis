@@ -22,3 +22,10 @@ void swap(unsigned *a, unsigned *b, stats_t *stats)
     *a = *b;
     *b = tmp;
 }
+
+
+void copy(unsigned *from, unsigned *to, stats_t *stats)
+{
+    stats->_ncopies++;
+    *to = *from;
+}

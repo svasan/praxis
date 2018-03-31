@@ -1,5 +1,5 @@
 sort: *.c *.h
-	gcc -o sort main.c sort.c util.c stats.c
+	gcc -g -o sort main.c sort.c util.c stats.c
 
 clean:
 	rm -f sort

@@ -44,10 +44,15 @@ void generate_random_array(unsigned *array, size_t sz)
     }
 }
 
+void __print_array(unsigned *array, size_t start, size_t end)
+{
+    for(size_t i = start; i <= end; i++)
+        printf("\t[%zu]\t%15u\n", i, array[i]);
+}
+
 void print_array(sort_data_t *data)
 {
-    for(size_t i = 0; i < data->_count; i++)
-        printf("\t[%zu]\t%15u\n", i, data->_array[i]);
+    __print_array(data->_array, 0, data->_count - 1);
 }
 
 sort_data_t *make_sort_data(sort_algo_t algo, size_t count)
@@ -82,6 +87,7 @@ int is_sorted(sort_data_t *data)
 int selection_sort(sort_data_t *data);
 int insertion_sort(sort_data_t *data);
 int shell_sort(sort_data_t *data);
+int merge_sort(sort_data_t *data);
 
 int sort(sort_data_t *data)
 {
@@ -96,8 +102,10 @@ int sort(sort_data_t *data)
     case ShellSort:
         ret = shell_sort(data);
         break;
-    case BubbleSort:
     case MergeSort:
+        ret = merge_sort(data);
+        break;
+    case BubbleSort:
     case QuickSort:
     case HeapSort:
         printf("Unimplemented sort algorithm: %s\n", sort_algo_name(data->_algo));
@@ -172,4 +180,80 @@ int shell_sort(sort_data_t *data)
         gap = gap/3;
     }
     return 0;
+}
+
+void __merge(unsigned *array, size_t start1, size_t start2, size_t end, stats_t *stats)
+{
+    /* The two arrays are adjacent: [start1..start2-1] [start2..end] */
+
+    /*
+     * Copy the first one into a temp location.
+     * Skip any initial parts that are already in place.
+     */
+    unsigned tmp[start2-start1];
+
+    size_t first_idx = start1;
+    while (less(array[start2], array[first_idx], stats) != 0 && first_idx < start2)
+        first_idx++;
+    for(size_t i = first_idx; i < start2; i++)
+        copy(array+i, tmp+i-start1, stats);
+
+    /*
+    printf("tmp array:\n");
+    __print_array(tmp, 0, start2-start1-1);
+    */
+
+    size_t second_idx = start2;
+    for(size_t i = first_idx; i <= end; i++) {
+        /* printf("first_idx=%zu second_idx=%zu\n", first_idx, second_idx); */
+        if (first_idx >= start2) {
+            /*
+             * First array is done.
+             * Whats left is from the second which is already at the end.
+             */
+            break;
+        } else if (second_idx > end || less(tmp[first_idx-start1], array[second_idx], stats) == 0)  {
+            copy(tmp+first_idx-start1, array+i, stats);
+            first_idx++;
+        } else {
+            copy(array+second_idx, array+i, stats);
+            second_idx++;
+        }
+        /* __print_array(array, start1, end); */
+    }
+    return;
+}
+
+int __msort(unsigned *array, size_t start, size_t end, stats_t *stats)
+{
+    /* printf("start=%zu end=%zu\n", start, end); */
+    if (start == end)
+        return 0;
+
+    size_t mid = start + (end-start+1)/2;
+    __msort(array, start, mid-1, stats);
+    __msort(array, mid, end, stats);
+
+    __merge(array, start, mid, end, stats);
+
+    /*
+    printf("merged array %zu..%zu\n", start, end);
+    __print_array(array, start, end);
+    */
+
+    return 0;
+}
+
+int merge_sort(sort_data_t *data)
+{
+    /*
+    print_array(data);
+
+    int ret = __msort(data->_array, 0, data->_count-1, data->_stats);
+
+    print_array(data);
+
+    return ret;
+    */
+    return __msort(data->_array, 0, data->_count-1, data->_stats);
 }

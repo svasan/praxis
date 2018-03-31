@@ -7,6 +7,7 @@
 typedef struct {
     uint64_t _ncompares;
     uint64_t _nexchanges;
+    uint64_t _ncopies;
     clock_t _cpu_time;
 } stats_t;
 
