@@ -22,19 +22,3 @@ void swap(unsigned *a, unsigned *b, stats_t *stats)
     *a = *b;
     *b = tmp;
 }
-
-int is_sorted(unsigned *arr, size_t sz)
-{
-    for (size_t i = 1; i < sz - 1; i++) {
-        if (arr[i] < arr[i-1])
-            return -1;
-    }
-    return 0;
-}
-
-int generate_random_array(unsigned *arr, size_t sz)
-{
-    for (size_t i = 0; i < sz; i++) {
-        arr[i] = random();
-    }
-}
