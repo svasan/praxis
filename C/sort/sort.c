@@ -44,6 +44,12 @@ void generate_random_array(unsigned *array, size_t sz)
     }
 }
 
+void print_array(sort_data_t *data)
+{
+    for(size_t i = 0; i < data->_count; i++)
+        printf("\t[%zu]\t%15u\n", i, data->_array[i]);
+}
+
 sort_data_t *make_sort_data(sort_algo_t algo, size_t count)
 {
     sort_data_t *data = malloc(sizeof(sort_data_t));
@@ -75,6 +81,7 @@ int is_sorted(sort_data_t *data)
 
 int selection_sort(sort_data_t *data);
 int insertion_sort(sort_data_t *data);
+int shell_sort(sort_data_t *data);
 
 int sort(sort_data_t *data)
 {
@@ -86,8 +93,10 @@ int sort(sort_data_t *data)
     case InsertionSort:
         ret = insertion_sort(data);
         break;
-    case BubbleSort:
     case ShellSort:
+        ret = shell_sort(data);
+        break;
+    case BubbleSort:
     case MergeSort:
     case QuickSort:
     case HeapSort:
@@ -105,9 +114,7 @@ void print_result(sort_data_t *data)
 {
     if (is_sorted(data) != 0) {
         printf("Array is not sorted\n");
-        for (size_t i = 0; i < data->_count; i++) {
-            printf("%llu\n", (unsigned long long) data->_array[i]);
-        }
+        print_array(data);
         exit(1);
     }
 
@@ -141,6 +148,28 @@ int insertion_sort(sort_data_t *data)
             if (less(array[j], array[j-1], stats) == 0)
                 swap(array+j, array+j-1, stats);
         }
+    }
+    return 0;
+}
+
+int shell_sort(sort_data_t *data)
+{
+    unsigned gap = 1;
+    while (gap < data->_count/3)
+        gap = 3*gap + 1;
+
+    unsigned *array = data->_array;
+    stats_t *stats = data->_stats;
+    while (gap > 0) {
+        /*
+        printf("Gap is: %u\n", gap);
+        print_array(data);
+        */
+        for(size_t i = gap; i < data->_count; i++)
+            for(size_t j = i; j >= gap ; j=j-gap)
+                if (less(array[j], array[j-gap], stats) == 0)
+                    swap(array+j, array+j-gap, stats);
+        gap = gap/3;
     }
     return 0;
 }
