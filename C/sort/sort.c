@@ -44,15 +44,16 @@ void generate_random_array(unsigned *array, size_t sz)
     }
 }
 
-void __print_array(unsigned *array, size_t start, size_t end)
+void __print_array(unsigned *start, unsigned *end)
 {
-    for(size_t i = start; i <= end; i++)
-        printf("\t[%zu]\t%15u\n", i, array[i]);
+    for(size_t i = 0; start <= end; i++, start++)
+        printf("\t[%zu]\t%15u\n", i, *start);
 }
 
 void print_array(sort_data_t *data)
 {
-    __print_array(data->_array, 0, data->_count - 1);
+    unsigned *start = data->_array, *end = (data->_array + data->_count - 1);
+    __print_array(start, end);
 }
 
 sort_data_t *make_sort_data(sort_algo_t algo, size_t count)
@@ -182,6 +183,54 @@ int shell_sort(sort_data_t *data)
     return 0;
 }
 
+// Expects the arrays to be merged to be contiguous, with array_1
+// before array_2.
+// The merged ouput is stored in the combined locations.
+void __merge2(unsigned *start_1, unsigned *end_1, unsigned *start_2, unsigned *end_2, stats_t *stats)
+{
+    // Skip over parts of array_1 that are already in place ie smaller
+    // than array_2.
+    // The actual check is reverse - whether start_2 is lesser - so
+    // that even equal items are left in place.
+    while(less(*start_2, *start_1, stats) != 0 && start_1 < start_2)
+        start_1++;
+
+    if (start_1 == start_2)
+        return;
+
+    unsigned *start_merge = start_1, *end_merge = end_2;
+
+    // Copy over remainder from array_1 into a tmp array and switch
+    // the array_1 pointers to that.
+    unsigned *buf = (unsigned *) malloc(sizeof(unsigned) * (start_2-start_1));
+    if (!buf) {
+        printf("couldn't allocate temp buffer for merge");
+        exit(1);
+    }
+    unsigned *tmp = buf;
+    while (start_1 <= end_1)
+        copy(start_1++, tmp++, stats);
+    start_1 = buf;
+    end_1 = tmp - 1;
+
+    // Merge.
+    while (start_merge <= end_merge) {
+        if (start_1 > end_1) {
+            /*
+             * The first array is done. Everything now has to come
+             * from the second array which is already at the end so
+             * there is nothing more to do.
+             */
+            break;
+        } else if (start_2 > end_2 || less(*start_1, *start_2, stats) == 0) {
+            copy(start_1++, start_merge++, stats);
+        } else {
+            copy(start_2++, start_merge++, stats);
+        }
+    }
+    return;
+}
+
 void __merge(unsigned *array, size_t start1, size_t start2, size_t end, stats_t *stats)
 {
     /* The two arrays are adjacent: [start1..start2-1] [start2..end] */
@@ -224,17 +273,21 @@ void __merge(unsigned *array, size_t start1, size_t start2, size_t end, stats_t 
     return;
 }
 
-int __msort(unsigned *array, size_t start, size_t end, stats_t *stats)
+int __msort(unsigned *start, unsigned *end, stats_t *stats)
 {
     /* printf("start=%zu end=%zu\n", start, end); */
     if (start == end)
         return 0;
 
-    size_t mid = start + (end-start+1)/2;
-    __msort(array, start, mid-1, stats);
-    __msort(array, mid, end, stats);
+    size_t mid = (end - start + 1)/2;
 
-    __merge(array, start, mid, end, stats);
+    unsigned *start_1 = start, *end_1 = start + mid - 1, *start_2 = start + mid, *end_2 = end;
+    __msort(start_1, end_1, stats);
+    __msort(start_2, end_2, stats);
+
+    /* __merge2(array, start, mid, end, stats); */
+
+    __merge2(start_1, end_1, start_2, end_2, stats);
 
     /*
     printf("merged array %zu..%zu\n", start, end);
@@ -255,5 +308,6 @@ int merge_sort(sort_data_t *data)
 
     return ret;
     */
-    return __msort(data->_array, 0, data->_count-1, data->_stats);
+    unsigned *start = data->_array, *end = (data->_array + data->_count - 1);
+    return __msort(start, end, data->_stats);
 }
