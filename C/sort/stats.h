@@ -15,6 +15,6 @@ stats_t *make_stats();
 
 void clear_stats(stats_t *stats);
 
-void print_stats(stats_t *stats);
+void print_stats(FILE *fp, stats_t *stats);
 
 #endif

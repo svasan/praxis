@@ -37,25 +37,6 @@ const char *sort_algo_name(sort_algo_t algo)
     return sort_names[InvalidSort];
 }
 
-void generate_random_array(unsigned *array, size_t sz)
-{
-    for (size_t i = 0; i < sz; i++) {
-        array[i] = random();
-    }
-}
-
-void __print_array(unsigned *start, unsigned *end)
-{
-    for(size_t i = 0; start <= end; i++, start++)
-        printf("\t[%zu]\t%15u\n", i, *start);
-}
-
-void print_array(sort_data_t *data)
-{
-    unsigned *start = data->_array, *end = (data->_array + data->_count - 1);
-    __print_array(start, end);
-}
-
 sort_data_t *make_sort_data(sort_algo_t algo, size_t count)
 {
     sort_data_t *data = malloc(sizeof(sort_data_t));
@@ -70,7 +51,11 @@ sort_data_t *make_sort_data(sort_algo_t algo, size_t count)
         perror("Couldn't malloc array to sort");
         exit(1);
     }
-    generate_random_array(data->_array, count);
+
+    if (input_file == NULL)
+        generate_random_array(data->_array, count);
+    else
+        load_input_data(data->_array, count);
     data->_stats = make_stats();
     return data;
 }
@@ -109,25 +94,14 @@ int sort(sort_data_t *data)
     case BubbleSort:
     case QuickSort:
     case HeapSort:
-        printf("Unimplemented sort algorithm: %s\n", sort_algo_name(data->_algo));
+        fprintf(stderr,"Unimplemented sort algorithm: %s\n", sort_algo_name(data->_algo));
         exit(1);
     default:
-        printf("Invalid sort algorithm: %s (%d)\n",
+        fprintf(stderr,"Invalid sort algorithm: %s (%d)\n",
                sort_algo_name(data->_algo), data->_algo);
         exit(1);
     }
     return ret;
-}
-
-void print_result(sort_data_t *data)
-{
-    if (is_sorted(data) != 0) {
-        printf("Array is not sorted\n");
-        print_array(data);
-        exit(1);
-    }
-
-    print_stats(data->_stats);
 }
 
 int selection_sort(sort_data_t *data)
@@ -170,10 +144,6 @@ int shell_sort(sort_data_t *data)
     unsigned *array = data->_array;
     stats_t *stats = data->_stats;
     while (gap > 0) {
-        /*
-        printf("Gap is: %u\n", gap);
-        print_array(data);
-        */
         for(size_t i = gap; i < data->_count; i++)
             for(size_t j = i; j >= gap ; j=j-gap)
                 if (less(array[j], array[j-gap], stats) == 0)
@@ -204,7 +174,7 @@ void __merge2(unsigned *start_1, unsigned *end_1, unsigned *start_2, unsigned *e
     // the array_1 pointers to that.
     unsigned *buf = (unsigned *) malloc(sizeof(unsigned) * (start_2-start_1));
     if (!buf) {
-        printf("couldn't allocate temp buffer for merge");
+        fprintf(stderr,"couldn't allocate temp buffer for merge");
         exit(1);
     }
     unsigned *tmp = buf;
@@ -247,14 +217,8 @@ void __merge(unsigned *array, size_t start1, size_t start2, size_t end, stats_t 
     for(size_t i = first_idx; i < start2; i++)
         copy(array+i, tmp+i-start1, stats);
 
-    /*
-    printf("tmp array:\n");
-    __print_array(tmp, 0, start2-start1-1);
-    */
-
     size_t second_idx = start2;
     for(size_t i = first_idx; i <= end; i++) {
-        /* printf("first_idx=%zu second_idx=%zu\n", first_idx, second_idx); */
         if (first_idx >= start2) {
             /*
              * First array is done.
@@ -268,7 +232,6 @@ void __merge(unsigned *array, size_t start1, size_t start2, size_t end, stats_t 
             copy(array+second_idx, array+i, stats);
             second_idx++;
         }
-        /* __print_array(array, start1, end); */
     }
     return;
 }
@@ -289,25 +252,11 @@ int __msort(unsigned *start, unsigned *end, stats_t *stats)
 
     __merge2(start_1, end_1, start_2, end_2, stats);
 
-    /*
-    printf("merged array %zu..%zu\n", start, end);
-    __print_array(array, start, end);
-    */
-
     return 0;
 }
 
 int merge_sort(sort_data_t *data)
 {
-    /*
-    print_array(data);
-
-    int ret = __msort(data->_array, 0, data->_count-1, data->_stats);
-
-    print_array(data);
-
-    return ret;
-    */
-    unsigned *start = data->_array, *end = (data->_array + data->_count - 1);
-    return __msort(start, end, data->_stats);
+    return __msort(SORT_ARRAY_START_PTR(data),
+                   SORT_ARRAY_END_PTR(data), data->_stats);
 }

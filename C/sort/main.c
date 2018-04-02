@@ -4,85 +4,84 @@
 #include <stdlib.h>
 #include <string.h>
 #include "sort.h"
-
-/*
-unsigned int DEFAULT_MAX_NUMBERS = 1024 * 1024;
-*/
+#include "util.h"
 
 void usage_and_exit(char* name)
 {
-    printf("Usage: %s -t <type> -c <count> \n", name);
-    printf(" Where: \n" );
-    printf("    <type> is one of: Selection, Insertion, Bubble, Shell, Merge, Quick, Heap\n");
-    printf("    <count> is the count of numbers to sort up to %u (RAND_MAX)\n", RAND_MAX);
+    fprintf(stderr,"Usage: %s -t <type> -c <count> [-i <input file>] [-o <output file>]\n", name);
+    fprintf(stderr," Where: \n" );
+    fprintf(stderr,"    <type> is one of: Selection, Insertion, Bubble, Shell, Merge, Quick, and Heap.\n");
+    fprintf(stderr,"    <count> is the count of numbers to sort.\n"
+           "        These are generated using random() if -i is not specified.\n");
+    fprintf(stderr,"    <input file> if specified is the file that contains the numbers to sort, one per line.\n"
+           "        At most <count> number of lines are read from the file. Anything more is ignored.\n"
+           "        %s aborts if the file has less than <count> lines\n", name);
+    fprintf(stderr,"    <output file> if specified is the file to write the sorted numbers to with some stats at the end.\n"
+           "        Defaults to stdout if it is not specified.\n");
     exit(1);
+}
+
+void print_result(sort_data_t *data)
+{
+    if (is_sorted(data) != 0) {
+        fprintf(stderr,"Array is not sorted\n");
+        print_array(stderr, 1, SORT_ARRAY_START_PTR(data), SORT_ARRAY_END_PTR(data));
+        exit(1);
+    }
+
+    if (output_file) {
+        print_array(output_file, 0, SORT_ARRAY_START_PTR(data), SORT_ARRAY_END_PTR(data));
+        fprintf(output_file, "\n\n");
+        print_stats(output_file, data->_stats);
+    }
 }
 
 int main(int argc, char **argv)
 {
-    if (argc != 5)
+    if (argc < 5)
         usage_and_exit(argv[0]);
 
-    /*
-    uint64_t count = DEFAULT_MAX_NUMBERS;
-    const char *file = argv[1];
-    */
-
-    if (strcmp(argv[1],"-t") != 0) {
-        usage_and_exit(argv[0]);
-    }
-
-    sort_algo_t algo = to_sort_algo(argv[2]);
-    if (algo == InvalidSort) {
-        printf("Invalid -t option: %s\n", argv[2]);
-        usage_and_exit(argv[0]);
-    }
-
-
-    if (strcmp(argv[3],"-c") != 0) {
-        usage_and_exit(argv[0]);
-    }
-
-    int64_t c = strtol(argv[4], NULL, 10);
-    if (c <= 0) {
-        printf("Invalid value %lli specified for -c\n", (long long int) c);
-        exit(1);
-    }
-
-    /* The range of random() is 0..RAND_MAX so more numbers will just be duplicates.*/
-    if (c > RAND_MAX) {
-        printf("Cannot generate more than %u numbers", RAND_MAX);
-    }
-
-    size_t count = c;
-
-    /*
-    file = argv[3];
-
-    FILE *fp = fopen(file, "r");
-    if (!fp) {
-        char err[512];
-        sprintf(err,"Open failed for file=%s", argv[1]);
-        perror(err);
-        exit(1);
-    }
-
-    char buf[256];
-    uint64_t n = 0;
-    for(; n < count && fgets(buf, 256, fp) != NULL; n++) {
-        char *endptr = NULL;
-        uint64_t val = strtol(buf, &endptr, 10);
-        if (endptr == buf) {
-            printf("Invalid number: %s\n", buf);
-            exit(1);
+    sort_algo_t algo = InvalidSort;
+    size_t count = 0;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i],"-t") == 0) {
+            algo = to_sort_algo(argv[++i]);
+            if (algo == InvalidSort) {
+                fprintf(stderr,"Invalid -t option: %s\n", argv[i]);
+                usage_and_exit(argv[0]);
+            }
+        } else if (strcmp(argv[i], "-c") == 0) {
+            long c = strtol(argv[++i], NULL, 10);
+            if (c <= 0) {
+                fprintf(stderr,"Invalid value %lli specified for -c\n", (long long int) c);
+                exit(1);
+            }
+            count = (size_t) c;
+        } else if (strcmp(argv[i], "-i") == 0) {
+            if (strcmp(argv[++i], "-") == 0)
+                input_file = stdin;
+            else
+                input_file = Fopen(argv[i], "r");
+        } else if (strcmp(argv[i], "-o") == 0) {
+            output_file = Fopen(argv[++i], "w");
+        } else {
+            fprintf(stderr, "Unknown option: %s", argv[i]);
+            usage_and_exit(argv[0]);
         }
-        arr[n] = val;
     }
-    */
+
+    // These options must be set.
+    if (algo == InvalidSort || count == 0)
+        usage_and_exit(argv[0]);
+
+    /* If input is being read either from file or stdout, but no
+       output file is specified, print to stdout */
+    if (input_file != NULL && output_file == NULL)
+        output_file = stdout;
 
     sort_data_t *data = make_sort_data(algo, count);
     if (sort(data) != 0) {
-        printf("sort failed.\n");
+        fprintf(stderr,"sort failed.\n");
         exit(1);
     }
 

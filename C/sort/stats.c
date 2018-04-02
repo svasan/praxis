@@ -18,11 +18,10 @@ void clear_stats(stats_t *stats)
     stats->_ncompares = stats->_nexchanges = stats->_ncopies = stats->_cpu_time = 0;
 }
 
-void print_stats(stats_t *stats)
+void print_stats(FILE *fp, stats_t *stats)
 {
-    printf("Comparisons: %llu, Copies: %llu, Exchanges: %llu, Time: %Lg\n",
-           (unsigned long long) stats->_ncompares,
-           (unsigned long long) stats->_ncopies,
-           (unsigned long long) stats->_nexchanges,
-           (long double) (stats->_cpu_time / CLOCKS_PER_SEC));
+    fprintf(fp, "Comparisons: %20llu\n", (unsigned long long) stats->_ncompares);
+    fprintf(fp, "     Copies: %20llu\n", (unsigned long long) stats->_ncopies);
+    fprintf(fp, "  Exchanges: %20llu\n", (unsigned long long) stats->_nexchanges);
+    fprintf(fp, "       Time: %20Lg\n", (long double) (stats->_cpu_time / CLOCKS_PER_SEC));
 }
