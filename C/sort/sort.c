@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -74,6 +75,9 @@ int selection_sort(sort_data_t *data);
 int insertion_sort(sort_data_t *data);
 int shell_sort(sort_data_t *data);
 int merge_sort(sort_data_t *data);
+int quick_sort(unsigned *start, unsigned *end, stats_t *stats);
+int heap_sort(unsigned *start, size_t count, stats_t *stats);
+int bubble_sort(unsigned *start, unsigned *end, stats_t *stats);
 
 int sort(sort_data_t *data)
 {
@@ -91,9 +95,13 @@ int sort(sort_data_t *data)
     case MergeSort:
         ret = merge_sort(data);
         break;
-    case BubbleSort:
     case QuickSort:
+        ret = quick_sort(data->_array, SORT_ARRAY_END_PTR(data), data->_stats);
+        break;
     case HeapSort:
+        ret = heap_sort(data->_array, data->_count, data->_stats);
+        break;
+    case BubbleSort:
         fprintf(stderr,"Unimplemented sort algorithm: %s\n", sort_algo_name(data->_algo));
         exit(1);
     default:
@@ -259,4 +267,73 @@ int merge_sort(sort_data_t *data)
 {
     return __msort(SORT_ARRAY_START_PTR(data),
                    SORT_ARRAY_END_PTR(data), data->_stats);
+}
+
+int quick_sort(unsigned *start, unsigned *end, stats_t *stats)
+{
+    if (start >= end)
+        return 0;
+
+    if (end == start+1) {
+        if (less(*end, *start, stats) == 0)
+            swap(start, end, stats);
+        return 0;
+    }
+
+    swap(start, start + (end-start)/2, stats);
+
+    unsigned pivot = *start, *left = start;
+    for(unsigned *ptr = start+1; ptr <= end; ptr++)
+        if (less(*ptr, pivot, stats) == 0)
+            if (ptr > ++left)
+                swap(ptr, left, stats);
+
+    swap(start, left, stats);
+
+    quick_sort(start, left-1, stats);
+    quick_sort(left+1, end, stats);
+    return 0;
+}
+
+void bubble_down(unsigned *array, size_t count, size_t n, stats_t *stats)
+{
+    size_t last = count-1;
+    while (n < last) {
+        size_t left = 2*n +1;
+        if (left > last)
+            break;
+        size_t right = 2*n + 2;
+        size_t max = right <= last && less(array[left], array[right], stats) == 0 ? right : left;
+        if (less(array[n], array[max], stats) == 0)
+            swap(&array[n], &array[max], stats);
+        n = max;
+    }
+}
+
+void make_max_heap(unsigned *array, size_t count, stats_t *stats)
+{
+    if (count == 1)
+        return;
+
+    size_t last = count - 1;
+    size_t n = (last & 1) ? last/2 : ((last/2) - 1);
+
+    while (n >= 0) {
+        bubble_down(array, count, n, stats);
+        if (n == 0)
+            break;
+        n--;
+    }
+}
+
+
+int heap_sort(unsigned *array, size_t count, stats_t *stats)
+{
+    make_max_heap(array, count, stats);
+    while (count > 1) {
+        swap(array, array+count-1, stats);
+        bubble_down(array, --count, 0, stats);
+    };
+
+    return 0;
 }
