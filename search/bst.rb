@@ -140,6 +140,26 @@ class BST
     node.key
   end
 
+  def succ(key)
+    return nil if key.nil? or @root.nil?
+
+    node = __succ(key, @root)
+    return nil if node.nil?
+    node.key
+  end
+
+  def ancestor(key1, key2)
+    return nil if key1.nil? or key2.nil? or @root.nil?
+
+    node, _, _ = case key1 <=> key2
+                 when -1, 0
+                   __common_ancestor(key1, key2, @root)
+                 when 1
+                   __common_ancestor(key2, key1, @root)
+                 end
+    node.nil? ? nil : node.key
+  end
+
   def to_s
     s = "["
     each {|k,v| s += "#{k}=#{v}, " }
@@ -180,13 +200,11 @@ class BST
   def __each_dfs(node, &b)
     return if node.nil?
 
-    if not node.left.nil?
-      __each_dfs(node.left, &b)
-    end
+    __each_dfs(node.left, &b) if not node.left.nil?
 
     yield node.key, node.value
-    node = node.right
-    __each_dfs(node, &b)
+
+    __each_dfs(node.right, &b)
   end
 
   # returns [node, parent] of node that has the key
@@ -245,4 +263,69 @@ class BST
     end
   end
 
+
+  def __succ(key, node)
+    return nil if node.nil?
+
+    case node.key <=> key
+    when -1, 0
+      return nil if node.right.nil?
+       __succ(key, node.right)
+    when 1
+      return node if node.left.nil?
+      succ = __succ(key, node.left)
+      succ.nil? ? node : succ
+    end
+  end
+
+  # Expects first <= second
+  # return [ancestor, found_k1, found_k1]
+  def __common_ancestor(first, second, node)
+    return nil, nil, nil if node.nil?
+
+    skip_right = skip_left = found_first = found_second = false
+    case node.key <=> first
+    when -1
+      skip_left = true
+    when 0
+      found_first = skip_left = true
+    when 1
+      # Do nothing
+    end
+
+    case node.key <=> second
+    when -1
+      # Do nothing
+    when 0
+      skip_right = found_second = true
+    when 1
+      skip_right = true
+    end
+
+    if not skip_left
+      ancestor, f1, s1 = __common_ancestor(first, second, node.left)
+      return ancestor, f1, s1 if not ancestor.nil?
+
+      return node, f1, s1 if f1 and s1
+
+      found_first = f1 || found_first
+      found_second = s1 || found_second
+    end
+
+    return nil, found_first, found_second if (found_first and found_second) or skip_right
+
+    ancestor, f2, s2 = __common_ancestor(first, second, node.right)
+    return ancestor, f2, s2 if not ancestor.nil?
+
+    return node, f2, s2 if f2 and s2
+
+    found_first = f2 || found_first
+    found_second = s2 || found_second
+
+    if found_first and found_second and node.key != first
+      return node, found_first, found_second
+    end
+
+    return nil, found_first, found_second
+  end
 end

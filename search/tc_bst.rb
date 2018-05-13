@@ -77,4 +77,26 @@ class TestBST < Test::Unit::TestCase
     assert(@bst.empty?, "Tree should be empty");
     # puts "#{@bst}"
   end
+
+  def test_succ
+    for i in (0..@keys.size-2)
+      key = @keys[i]
+      succ = @keys[i+1]
+      assert_equal(succ, @bst.succ(key), "Expected succ(#{key}) to be #{succ} but got #{@bst.succ(key)}")
+    end
+  end
+
+  def test_common_ancestor
+    # Expected structure:
+    #                    12676
+    #        2947                    23067
+    #    520    10504          22814       23673
+    # 108  -   -     11144  21242   -    -      31747
+    ancestors = { [108, 11144] => 2947, [520, 10504] => 2947, [21242, 31747] => 23067, [22814, 23673] => 23067,
+                  [108, 520] => 2947, [10504, 11144] => 2947, [11144, 21242] => 12676, [108, 31747] => 12676, [108, 12676] => nil}
+    ancestors.each do |keys, ancestor|
+      assert_equal(ancestor, @bst.ancestor(*keys), "Expected ancestor #{ancestor} for #{keys} but got #{@bst.ancestor(*keys)}")
+      assert_equal(ancestor, @bst.ancestor(*(keys.reverse)), "Expected ancestor #{ancestor} for #{keys.reverse} but got #{@bst.ancestor(*(keys.reverse))}")
+    end
+  end
 end
