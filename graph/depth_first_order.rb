@@ -22,6 +22,7 @@ class DepthFirstOrder
     @pre << v
     @marked[v] = true
     @graph.each_edge(v) do |w|
+      w = w.to if w.respond_to?(:to)
       dfs(w) if not @marked[w]
     end
     @post << v

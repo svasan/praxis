@@ -19,6 +19,7 @@ class DirectedCycle
     @marked[v] = true
     @on_stack << v
     @graph.each_edge(v) do |w|
+      w = w.to if w.respond_to?(:to)
       if not @marked[w]
         @edge_to[w] = v
         dfs(w)
