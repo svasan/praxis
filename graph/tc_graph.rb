@@ -7,6 +7,7 @@ require_relative 'directed_cycle'
 require_relative 'edge_weighted_digraph'
 require_relative 'edge_weighted_graph'
 require_relative 'mst_eager_prim'
+require_relative 'dag_paths'
 require 'test/unit'
 
 class TestUndirectedGraph < Test::Unit::TestCase
@@ -25,6 +26,9 @@ class TestUndirectedGraph < Test::Unit::TestCase
       EdgeWeightedGraph.fromFile(io)
     end
     @ewd = File.open("tinyEWD.txt") do |io|
+      EdgeWeightedDigraph.fromFile(io)
+    end
+    @ewdag = File.open("tinyEWDAG.txt") do |io|
       EdgeWeightedDigraph.fromFile(io)
     end
   end
@@ -97,5 +101,41 @@ class TestUndirectedGraph < Test::Unit::TestCase
     mst << EWGEdge.new(4,5,0.35)
     mst << EWGEdge.new(6,2,0.4)
     assert_equal(mst, prim.mst, "MST did not match")
+  end
+
+  def test_dag_paths
+    shortest_paths = [
+      [[5, 4], 0.73],
+      [[5], 0.32],
+      [[5, 7], 0.62],
+      [[5, 1], 0.61],
+      [[5], 0.35],
+      [[], 0.00],
+      [[5, 1, 3], 1.13],
+      [[5], 0.28],
+    ]
+    dag_spath = DAGShortestPath.new(@ewdag, 5)
+    shortest_paths.each_with_index do |path_to, v|
+      assert_equal(path_to, dag_spath.path_to(v),
+                  "Shortest path for #{v} is not equal. Expected: #{path_to}, Actual: #{dag_spath.path_to(v)}")
+    end
+
+    longest_paths = [
+      [[5, 1, 3, 6, 4], 2.44],
+      [[5], 0.32],
+      [[5, 1, 3, 6, 4, 7], 2.77],
+      [[5, 1], 0.61],
+      [[5, 1, 3, 6], 2.06],
+      [[], 0.0],
+      [[5, 1, 3], 1.13],
+      [[5, 1, 3, 6, 4], 2.43],
+    ]
+
+    dag_lpath = DAGLongestPath.new(@ewdag, 5)
+    longest_paths.each_with_index do |path_to, v|
+      assert_equal(path_to, dag_lpath.path_to(v),
+                  "Longest path for #{v} is not equal. Expected: #{path_to}, Actual: #{dag_lpath.path_to(v)}")
+
+    end
   end
 end
