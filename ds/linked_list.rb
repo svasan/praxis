@@ -1,9 +1,11 @@
 class LinkedList
   include Enumerable
+  include Comparable
 
-  def initialize
+  def initialize(coll = [])
     @first = @last = nil
     @size = 0
+    coll.each { |e|  self << e}
   end
 
   def <<(item)
@@ -26,6 +28,31 @@ class LinkedList
 
   def empty?
     @size == 0
+  end
+
+  def to_a
+    a = []
+    each do |v|
+      a << v
+    end
+    a
+  end
+
+  def <=>(other)
+    return nil if not other.instance_of?(self.class)
+
+    min_size = size <= other.size ? size : other.size
+    o_enum = other.to_enum
+    s_enum = to_enum
+
+    0.upto(min_size-1) do
+      s = s_enum.next
+      o = o_enum.next
+      next if s == o
+      return s <=> o
+    end
+
+    return size <=> other.size
   end
 
   def to_s

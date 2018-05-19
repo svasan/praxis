@@ -31,7 +31,7 @@ class DirectedCycle
         end
         cycle << w
         cycle << v
-        @cycle << cycle
+        @cycle << cycle.to_a
       end
     end
     @on_stack.pop
@@ -48,7 +48,7 @@ end
 
 if __FILE__ == $0
   require_relative 'digraph'
-  g = Digraph.fromFile(ARGV[0])
+  g = Digraph.fromFile(ARGF)
   dc = DirectedCycle.new(g)
   if dc.cycle?
     puts "Graph has #{dc.cycle.size} cycle(s): #{dc.cycle}"

@@ -60,13 +60,12 @@ class Digraph
     s
   end
 
-  def self.fromFile(filename)
-    f = File.open(filename)
-    nv = f.readline.to_i
-    ne = f.readline.to_i
+  def self.fromFile(fio)
+    nv = fio.readline.to_i
+    ne = fio.readline.to_i
     g = Digraph.new(nv)
     1.upto(ne) do
-      from, to = f.readline.split
+      from, to = fio.readline.split
       g.add_edge(from.to_i, to.to_i)
     end
     g
@@ -76,6 +75,6 @@ end
 
 
 if __FILE__ == $0
-  g = Digraph.fromFile(ARGV[0])
+  g = Digraph.fromFile(ARGF)
   puts g.to_s
 end

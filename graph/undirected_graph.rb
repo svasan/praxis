@@ -51,13 +51,12 @@ class UndirectedGraph
     s
   end
 
-  def self.fromFile(filename)
-    f = File.open(filename)
-    nv = f.readline.to_i
-    ne = f.readline.to_i
+  def self.fromFile(io)
+    nv = io.readline.to_i
+    ne = io.readline.to_i
     g = UndirectedGraph.new(nv)
     1.upto(ne) do
-      from, to = f.readline.split
+      from, to = io.readline.split
       g.add_edge(from.to_i, to.to_i)
     end
     g
