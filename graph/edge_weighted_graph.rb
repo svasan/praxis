@@ -21,8 +21,12 @@ class EdgeWeightedGraph
       raise RuntimeError, "Edge #{v} doesn't match either end - #{@v} or #{@w}"
     end
 
-    def <=>(other)
-      @weight <=> other.weight
+    def <=>(_other)
+      return @weight <=> _other.weight if @weight != _other.weight
+
+      return @v <=> _other.either if @v != _other.either
+
+      return @w <=> _other.other(_other.either)
     end
 
     def to_s

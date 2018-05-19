@@ -5,6 +5,8 @@ require_relative 'depth_first_order'
 require_relative 'breadth_first_paths'
 require_relative 'directed_cycle'
 require_relative 'edge_weighted_digraph'
+require_relative 'edge_weighted_graph'
+require_relative 'mst_eager_prim'
 require 'test/unit'
 
 class TestUndirectedGraph < Test::Unit::TestCase
@@ -18,6 +20,9 @@ class TestUndirectedGraph < Test::Unit::TestCase
     end
     @dag = File.open("tinyDAG.txt") do |io|
       Digraph.fromFile(io)
+    end
+    @ewg = File.open("tinyEWG.txt") do |io|
+      EdgeWeightedGraph.fromFile(io)
     end
     @ewd = File.open("tinyEWD.txt") do |io|
       EdgeWeightedDigraph.fromFile(io)
@@ -77,5 +82,20 @@ class TestUndirectedGraph < Test::Unit::TestCase
     assert_equal(post, dfo.post, "PostOrder didn't match for digraph")
     assert_equal(reverse_post, dfo.reverse_post,
                  "ReversePost didn't match for digraph")
+  end
+
+  EWGEdge = EdgeWeightedGraph::Edge
+
+  def test_prim_eager
+    prim = EagerPrimMST.new(@ewg)
+    mst = []
+    mst << EWGEdge.new(0,7,0.16)
+    mst << EWGEdge.new(1,7,0.19)
+    mst << EWGEdge.new(0,2,0.26)
+    mst << EWGEdge.new(2,3,0.17)
+    mst << EWGEdge.new(5,7,0.28)
+    mst << EWGEdge.new(4,5,0.35)
+    mst << EWGEdge.new(6,2,0.4)
+    assert_equal(mst, prim.mst, "MST did not match")
   end
 end
