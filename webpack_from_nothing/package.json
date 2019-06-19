@@ -9,9 +9,12 @@
     "webpack-cli": "^3.3.4",
     "webpack-merge": "^4.2.1"
   },
+  "config" : {
+    "webpack_args" : " --config webpack.config.js --display-error-details"
+  },
   "scripts": {
-    "webpack": "webpack --config webpack.config.js --display-error-details",
-    "webpack:prod": "webpack --config webpack.config.js --env production --display-error-details",
+    "webpack": "webpack $npm_package_config_webpack_args",
+    "webpack:prod": "webpack $npm_package_config_webpack_args --env production",
     "webpack:test": "webpack --config test/webpack.test.config.js --display-error-details",
     "jest": "jest test/bundle.test.js",
     "test": "yarn webpack:test && yarn jest"
