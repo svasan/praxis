@@ -1,6 +1,8 @@
-console.log("Hello from index.js");
-import address from "./address";
-import billing from "./billing";
+import mdPreviewer from "./markdownPreviewer";
 
-address.announce();
-billing.announce();
+window.onload = function() {
+  document.getElementById("editor").addEventListener(
+    "submit",
+    mdPreviewer.preview(document, "source", "preview")
+  )
+};
