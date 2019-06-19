@@ -4,11 +4,15 @@
   "main": "index.js",
   "license": "MIT",
   "devDependencies": {
+    "jest": "^24.8.0",
     "webpack": "^4.34.0",
     "webpack-cli": "^3.3.4"
   },
   "scripts": {
-    "webpack": "webpack --config webpack.config.js --display-error-details"
+    "webpack": "webpack --config webpack.config.js --display-error-details",
+    "webpack:test": "webpack --config test/webpack.test.config.js --display-error-details",
+    "jest": "jest test/bundle.test.js",
+    "test": "yarn webpack:test && yarn jest"
   },
   "dependencies": {
     "markdown": "^0.5.0"
